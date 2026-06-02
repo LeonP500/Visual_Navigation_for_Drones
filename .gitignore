@@ -1,5 +1,6 @@
 *.MP4
 *.SRT
 *.pdf
+preliminary_experiment.png
 map_database/
 __pycache__/
