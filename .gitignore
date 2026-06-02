@@ -1,0 +1,5 @@
+*.MP4
+*.SRT
+*.pdf
+map_database/
+__pycache__/
