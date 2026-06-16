@@ -5,6 +5,7 @@ from geopy.distance import distance
 import math
 import os
 import matplotlib.pyplot as plt
+from srt_parser import parse_dji_srt
 
 class VisualNavigator:
     def __init__(self, db_csv_path):
@@ -102,36 +103,43 @@ if __name__ == "__main__":
     db_csv = "map_database/database.csv"
     nav = VisualNavigator(db_csv)
     
-    # Run preliminary experiment using a few frames from the same video
+    # Run preliminary experiment using a few frames from a video
     video_path = "DJI_20260427152226_0017_D.MP4"
+    srt_path = video_path.replace(".MP4", ".SRT").replace(".mp4", ".srt")
+    
+    print(f"Parsing test SRT to get true path: {srt_path}...")
+    test_telemetry_df = parse_dji_srt(srt_path)
+    
     cap = cv2.VideoCapture(video_path)
     
     predicted_path = []
     true_path = []
     
     print("Running preliminary experiment (testing first 30 seconds)...")
-    frame_idx = 0
+    frame_idx = 1 # Start at 1 to align with srt frame indices
     while True:
         ret, frame = cap.read()
         if not ret or frame_idx > 30 * 30: # Test on first 900 frames
             break
             
         if frame_idx % 30 == 0: # Check 1 fps
+            # Extract true coordinate for this frame from the video's SRT
+            true_row = test_telemetry_df[test_telemetry_df['frame'] == frame_idx]
+            if not true_row.empty:
+                true_path.append((true_row.iloc[0]['latitude'], true_row.iloc[0]['longitude']))
+                
             frame_resized = cv2.resize(frame, (960, 540))
             loc = nav.localize(frame_resized)
             if loc:
-                target_lat, target_lon = compute_look_at_coordinate(
-                    loc['latitude'], loc['longitude'], loc['rel_alt'], loc['heading'], 45
-                )
                 predicted_path.append((loc['latitude'], loc['longitude']))
+                target_lat, target_lon = compute_look_at_coordinate(
+                    loc['latitude'], loc['longitude'], loc['rel_alt'], loc['heading']
+                )
                 print(f"Frame {frame_idx}: Localized at ({loc['latitude']:.5f}, {loc['longitude']:.5f}), Looking at ({target_lat:.5f}, {target_lon:.5f})")
                 
         frame_idx += 1
         
     cap.release()
-    
-    # Extract true path from DB for comparison
-    true_path = [(row['latitude'], row['longitude']) for _, row in nav.db.head(30).iterrows()]
     
     # Plotting
     pred_lats = [p[0] for p in predicted_path]
