@@ -104,7 +104,7 @@ if __name__ == "__main__":
     nav = VisualNavigator(db_csv)
     
     # Run preliminary experiment using a few frames from a video
-    video_path = "DJI_20260427152226_0017_D.MP4"
+    video_path = "DJI_20260427152735_0019_D.MP4"
     srt_path = video_path.replace(".MP4", ".SRT").replace(".mp4", ".srt")
     
     print(f"Parsing test SRT to get true path: {srt_path}...")
@@ -115,11 +115,11 @@ if __name__ == "__main__":
     predicted_path = []
     true_path = []
     
-    print("Running preliminary experiment (testing first 30 seconds)...")
+    print("Running preliminary experiment (testing first 60 seconds)...")
     frame_idx = 1 # Start at 1 to align with srt frame indices
     while True:
         ret, frame = cap.read()
-        if not ret or frame_idx > 30 * 30: # Test on first 900 frames
+        if not ret or frame_idx > 30 * 60: # Test on first 1800 frames
             break
             
         if frame_idx % 30 == 0: # Check 1 fps
